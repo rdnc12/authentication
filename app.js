@@ -10,7 +10,7 @@ const passport = require("passport");
 const passportLocalMongoose = require("passport-local-mongoose");
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const FacebookStrategy = require('passport-facebook').Strategy;
-const TwitterStrategy= require('passport-twitter').Strategy;
+const TwitterStrategy = require('passport-twitter').Strategy;
 const findOrCreate = require('mongoose-findorcreate');
 
 // const bcrypt = require('bcrypt');
@@ -37,7 +37,8 @@ const userSchema = new mongoose.Schema({
     email: String,
     password: String,
     googleId: String,
-    facebookId:String
+    facebookId: String,
+    twitterId: String
 });
 
 userSchema.plugin(passportLocalMongoose);
@@ -56,7 +57,7 @@ passport.deserializeUser(function (id, done) {
     });
 });
 
-
+/// GOOGLE LOGIN ///
 passport.use(new GoogleStrategy({
     clientID: process.env.CLIENT_ID,
     clientSecret: process.env.CLIENT_SECRET,
@@ -70,6 +71,7 @@ passport.use(new GoogleStrategy({
     }
 ));
 
+/// FACEBOOK LOGIN ///
 passport.use(new FacebookStrategy({
     clientID: process.env.APP_ID,
     clientSecret: process.env.APP_SECRET,
@@ -82,6 +84,7 @@ passport.use(new FacebookStrategy({
     }
 ));
 
+/// TWITTER LOGIN ///
 passport.use(new TwitterStrategy({
     consumerKey: process.env.CONSUMER_KEY,
     consumerSecret: process.env.CONSUMER_SECRET,
@@ -94,11 +97,14 @@ passport.use(new TwitterStrategy({
     }
 ));
 
+
 app.get("/", (req, res) => {
 
     res.render("home");
 });
 
+
+/// GOOGLE LOGIN SIDE ///
 app.get("/auth/google",
     passport.authenticate("google", { scope: ["profile"] })
 );
@@ -109,6 +115,8 @@ app.get('/auth/google/secrets',
         res.redirect('/secrets');
     });
 
+
+/// FACEBOOK LOGIN SIDE ///
 app.get("/auth/facebook",
     passport.authenticate("facebook")
 );
@@ -119,6 +127,17 @@ app.get('/auth/facebook/secrets',
         res.redirect('/secrets');
     });
 
+
+/// TWITTER LOGIN SIDE ///
+app.get("/auth/twitter",
+    passport.authenticate("twitter")
+);
+
+app.get('/auth/twitter/secrets',
+    passport.authenticate('twitter', { failureRedirect: "/login" }),
+    function (req, res) {
+        res.redirect('/secrets');
+    });
 
 
 /// LOGIN PAGE///////////////////////////////////////////
