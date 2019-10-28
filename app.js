@@ -5,6 +5,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const ejs = require("ejs");
 const mongoose = require("mongoose");
+const fs = require('fs');
 const session = require("express-session");
 const passport = require("passport");
 const passportLocalMongoose = require("passport-local-mongoose");
@@ -28,6 +29,10 @@ app.use(session({
 }));
 app.use(passport.initialize());
 app.use(passport.session());
+
+const text = fs.readFileSync("public/commonPassword/index.txt", "utf-8");
+var commonPassword = text.split('\n');
+console.log(commonPassword);
 
 
 mongoose.connect("mongodb://localhost:27017/userDB", { useNewUrlParser: true, useUnifiedTopology: true });
@@ -56,6 +61,7 @@ passport.deserializeUser(function (id, done) {
         done(err, user);
     });
 });
+
 
 /// GOOGLE LOGIN ///
 passport.use(new GoogleStrategy({
@@ -96,6 +102,7 @@ passport.use(new TwitterStrategy({
         });
     }
 ));
+
 
 
 app.get("/", (req, res) => {
@@ -210,15 +217,20 @@ app.route("/register")
         res.render("register");
     })
     .post((req, res) => {
-        User.register({ username: req.body.username }, req.body.password, (err, user) => {
-            if (err) {
-                res.redirect("/register");
-            } else {
-                passport.authenticate("local")(req, res, () => {
-                    res.redirect("/secrets");
-                });
-            }
-        });
+        if (!(commonPassword.includes(req.body.password))) {
+            User.register({ username: req.body.username }, req.body.password, (err, user) => {
+                if (err) {
+                    res.redirect("/register");
+                } else {
+                    passport.authenticate("local")(req, res, () => {
+                        res.redirect("/secrets");
+                    });
+                }
+            });
+
+        } else {
+            console.log('your password is common 10000 password');
+        }
         // bcrypt.hash(req.body.password, saltRounds, function (err, hash) {
         //     const newUser = new User({
         //         email: req.body.username,
