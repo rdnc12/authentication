@@ -185,11 +185,23 @@ app.route("/login")
     });
 
 app.get("/secrets", (req, res) => {
-    if (req.isAuthenticated()) {
-        res.render("secrets");
-    } else {
-        res.redirect("/login");
-    }
+
+    User.find({ "secret": { $ne: null } }, (err, foundUser) => {
+        if (!err) {
+            if (foundUser) {
+                res.render("secrets", { usersWithSecrets: foundUser });
+            }
+        }else{
+            res.status(400).send();
+        }
+    });
+
+
+    // if (req.isAuthenticated()) {
+    //     res.render("secrets");
+    // } else {
+    //     res.redirect("/login");
+    // }
 });
 
 app.get("/logout", (req, res) => {
@@ -206,7 +218,19 @@ app.route("/submit")
         }
     })
     .post((req, res) => {
+        const submittedSecret = req.body.secret;
 
+        User.findById(req.user.id, (err, foundUser) => {
+            if (!err) {
+                if (foundUser) {
+                    foundUser.secret = submittedSecret;
+                    foundUser.save().then(() =>
+                        res.redirect("/secrets"));
+                }
+            } else {
+                res.status(400).send();
+            }
+        });
     });
 
 
