@@ -30,9 +30,10 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-const text = fs.readFileSync("public/commonPassword/index.txt", "utf-8");
-var commonPassword = text.split('\n');
-console.log(commonPassword);
+const textPass = fs.readFileSync("public/commonPassword/index.txt", "utf-8");
+var commonPassword = textPass.split('\n');
+const textUser = fs.readFileSync("public/commonPassword/commonusernames.txt", "utf-8");
+var commonUsers = textUser.split('\n');
 
 
 mongoose.connect("mongodb://localhost:27017/userDB", { useNewUrlParser: true, useUnifiedTopology: true });
@@ -191,7 +192,7 @@ app.get("/secrets", (req, res) => {
             if (foundUser) {
                 res.render("secrets", { usersWithSecrets: foundUser });
             }
-        }else{
+        } else {
             res.status(400).send();
         }
     });
@@ -242,18 +243,22 @@ app.route("/register")
     })
     .post((req, res) => {
         if (!(commonPassword.includes(req.body.password))) {
-            User.register({ username: req.body.username }, req.body.password, (err, user) => {
-                if (err) {
-                    res.redirect("/register");
-                } else {
-                    passport.authenticate("local")(req, res, () => {
-                        res.redirect("/secrets");
-                    });
-                }
-            });
+            if (!(commonUsers.includes(req.body.username))) {
+                User.register({ username: req.body.username }, req.body.password, (err, user) => {
+                    if (err) {
+                        res.redirect("/register");
+                    } else {
+                        passport.authenticate("local")(req, res, () => {
+                            res.redirect("/secrets");
+                        });
+                    }
+                });
+            } else {
+                console.log('your username is common username');
+            }
 
         } else {
-            console.log('your password is common 10000 password');
+            console.log('your password is common password');
         }
         // bcrypt.hash(req.body.password, saltRounds, function (err, hash) {
         //     const newUser = new User({
